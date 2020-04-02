@@ -12,16 +12,40 @@ using System.Threading.Tasks;
 
 namespace ForumApp.Data.Repositories
 {
-    public class Repository<TEntity, TId> : IRepository<TEntity, TId>
+    public class DbRepository<TEntity, TId> : IRepository<TEntity, TId>
         where TEntity : EntityBase
     {
+        private string _dbPrefix;
+        private string _entityPrefix;
+        private string _createProcedure;
+        private string _selectProcedure;
+        private string _selectAllProcedure;
+        private string _updateProcedure;
+        private string _deleteProcedure;
+
         protected IDbTransaction _dbTransaction;
         protected IDbConnection _dbConnection;
-        public Repository(IDbTransaction dbTransaction)
+        private void CreateProceduresNames()
         {
+            // need to invert dependency
+            _dbPrefix = "[dbo].[Forum";
+            _entityPrefix = typeof(TEntity).Name;
+
+
+            _createProcedure = $"{_dbPrefix}_{_entityPrefix}_Create]";
+            _selectProcedure = $"{_dbPrefix}_{_entityPrefix}_Select]";
+            _selectAllProcedure = $"{_dbPrefix}_{_entityPrefix}_SelectAll]";
+            _updateProcedure = $"{_dbPrefix}_{_entityPrefix}_Update]";
+            _deleteProcedure = $"{_dbPrefix}_{_entityPrefix}_Delete]";
+        }
+        public DbRepository(IDbTransaction dbTransaction)
+        {
+
             _dbTransaction = dbTransaction
-                ?? throw new ArgumentNullException(nameof(dbTransaction));
+            ?? throw new ArgumentNullException(nameof(dbTransaction));
             _dbConnection = _dbTransaction.Connection;
+
+            CreateProceduresNames();
         }
 
         protected DynamicParameters CreateSqlArguments(TEntity entity)
