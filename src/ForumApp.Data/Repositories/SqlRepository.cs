@@ -12,12 +12,12 @@ using System.Threading.Tasks;
 
 namespace ForumApp.Data.Repositories
 {
-    public class DbRepository<TEntity, TId> : IRepository<TEntity, TId>
+    public class SqlRepository<TEntity, TId> : IRepository<TEntity, TId>
         where TEntity : EntityBase
     {
         private string _dbPrefix;
         private string _entityPrefix;
-        private string _createProcedure;
+        private string _insertProcedure;
         private string _selectProcedure;
         private string _selectAllProcedure;
         private string _updateProcedure;
@@ -32,13 +32,13 @@ namespace ForumApp.Data.Repositories
             _entityPrefix = typeof(TEntity).Name;
 
 
-            _createProcedure = $"{_dbPrefix}_{_entityPrefix}_Create]";
+            _insertProcedure = $"{_dbPrefix}_{_entityPrefix}_Insert]";
             _selectProcedure = $"{_dbPrefix}_{_entityPrefix}_Select]";
             _selectAllProcedure = $"{_dbPrefix}_{_entityPrefix}_SelectAll]";
             _updateProcedure = $"{_dbPrefix}_{_entityPrefix}_Update]";
             _deleteProcedure = $"{_dbPrefix}_{_entityPrefix}_Delete]";
         }
-        public DbRepository(IDbTransaction dbTransaction)
+        public SqlRepository(IDbTransaction dbTransaction)
         {
 
             _dbTransaction = dbTransaction
@@ -68,11 +68,11 @@ namespace ForumApp.Data.Repositories
         public virtual Task Add(TEntity entity)
         {
             _ = entity ?? throw new ArgumentNullException(nameof(entity));
+            // Need to handle exesting entity
 
             DynamicParameters parameters = CreateSqlArguments(entity);
-
             return _dbConnection.ExecuteAsync(
-                "[dbo].[Forum_User_Insert]"
+                sql: _insertProcedure
                 , param: parameters
                 , commandType: CommandType.StoredProcedure
                 , transaction: _dbTransaction);
@@ -86,7 +86,7 @@ namespace ForumApp.Data.Repositories
             DynamicParameters parameters = CreateSqlArguments(entity);
 
             return _dbConnection.ExecuteAsync(
-                "[dbo].[Forum_User_Update]"
+                  sql: _updateProcedure
                 , param: parameters
                 , commandType: CommandType.StoredProcedure
                 , transaction: _dbTransaction);
@@ -95,14 +95,14 @@ namespace ForumApp.Data.Repositories
         public virtual Task<IEnumerable<TEntity>> All()
         {
             return _dbConnection.QueryAsync<TEntity>
-                (sql: "Forum_User_SelectAll"
+                (sql: _selectAllProcedure
                 , transaction: _dbTransaction
                 , commandType: CommandType.StoredProcedure);
         }
         public virtual Task Remove(TId id)
         {
             return _dbConnection.ExecuteAsync(
-                "[dbo].[Forum_User_Delete]"
+                  sql: _deleteProcedure
                 , param: new { Id = id }
                 , commandType: CommandType.StoredProcedure
                 , transaction: _dbTransaction);
@@ -140,7 +140,7 @@ namespace ForumApp.Data.Repositories
         public virtual Task<TEntity> FindById(TId id)
         {
             return _dbConnection.QueryFirstAsync<TEntity>
-                (sql: "Forum_User_Select"
+                (sql: _selectProcedure
                 , param: new { Id = id }
                 , transaction: _dbTransaction
                 , commandType: CommandType.StoredProcedure);

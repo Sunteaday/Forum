@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ForumApp.Data.Repositories
 {
-    public class UserRepository : DbRepository<User, string>, IUserRepository
+    public class UserRepository : SqlRepository<User, string>, IUserRepository
     {
         public UserRepository(IDbTransaction dbTransaction)
             : base(dbTransaction)
