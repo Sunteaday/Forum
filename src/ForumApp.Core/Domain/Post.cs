@@ -12,8 +12,6 @@ namespace ForumApp.Core.Domain
 
         public string CreatorId { get; set; }
 
-        public User Creator { get; set; }
-
         public string TopicId { get; set; }
 
         public DateTime CreatedOn { get; set; }

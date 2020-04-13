@@ -1,23 +1,20 @@
-﻿using Dapper;
-using ForumApp.Core.Domain;
+﻿using ForumApp.Core.Domain;
 using ForumApp.Data.Infrastructure.Types.Builders;
 using ForumApp.Data.Repositories.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace ForumApp.Data.Repositories
 {
-    public class UserRepository 
-        : SqlRepository<User, string>
-        , IUserRepository
+    public class AbilityRepository
+        : SqlRepository<Ability, string[]>
+        , IAbilityRepository
     {
-        public UserRepository(SQLRepositoryBuilder builder)
+        public AbilityRepository(SQLRepositoryBuilder builder)
             : base(builder)
         {
-
         }
     }
 }

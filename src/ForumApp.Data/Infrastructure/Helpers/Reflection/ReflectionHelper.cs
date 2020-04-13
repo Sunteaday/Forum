@@ -1,9 +1,10 @@
-﻿using System;
+﻿using ForumApp.Data.Infrastructure.Types;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace ForumApp.Data.Helpers.Reflection
+namespace ForumApp.Data.Infrastructure.Helpers.Reflection
 {
     static class ReflectionHelper
     {
@@ -23,5 +24,11 @@ namespace ForumApp.Data.Helpers.Reflection
                        .Any(@interface => @interface.IsGenericType
                        && @interface.GetGenericTypeDefinition() == genericInterface);
         }
+        public static bool DoesImplementInterface(this Type type, Type Interface)
+        {
+            return type.GetInterfaces()
+                       .Any(@interface => @interface == Interface);
+        }
+
     }
 }

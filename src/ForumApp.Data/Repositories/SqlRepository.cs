@@ -1,7 +1,8 @@
 ﻿using Dapper;
-using ForumApp.Core.Domain;
-using ForumApp.Data.Helpers;
-using ForumApp.Data.Helpers.Reflection;
+using ForumApp.Core;
+using ForumApp.Data.Infrastructure.Helpers.Reflection;
+using ForumApp.Data.Infrastructure.Types;
+using ForumApp.Data.Infrastructure.Types.Builders;
 using ForumApp.Data.Repositories.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -12,40 +13,34 @@ using System.Threading.Tasks;
 
 namespace ForumApp.Data.Repositories
 {
-    public class SqlRepository<TEntity, TId> : IRepository<TEntity, TId>
+    public class SqlRepository<TEntity, TId>
+        : IRepository<TEntity, TId>
         where TEntity : EntityBase
     {
-        private string _dbPrefix;
-        private string _entityPrefix;
-        private string _insertProcedure;
-        private string _selectProcedure;
-        private string _selectAllProcedure;
-        private string _updateProcedure;
-        private string _deleteProcedure;
+        #region Fields
+        protected string _insertProcedure;
+        protected string _selectProcedure;
+        protected string _selectAllProcedure;
+        protected string _updateProcedure;
+        protected string _deleteProcedure;
 
         protected IDbTransaction _dbTransaction;
         protected IDbConnection _dbConnection;
-        private void CreateProceduresNames()
+        #endregion
+
+        public SqlRepository(SQLRepositoryBuilder builder)
         {
-            // need to invert dependency
-            _dbPrefix = "[dbo].[Forum";
-            _entityPrefix = typeof(TEntity).Name;
+            if (builder is null)
+                throw new ArgumentNullException(nameof(builder));
 
+            _insertProcedure = builder.InsertProcedure;
+            _selectProcedure = builder.SelectProcedure;
+            _selectAllProcedure = builder.SelectAllProcedure;
+            _updateProcedure = builder.AlterProcedure;
+            _deleteProcedure = builder.DeleteProcedure;
 
-            _insertProcedure = $"{_dbPrefix}_{_entityPrefix}_Insert]";
-            _selectProcedure = $"{_dbPrefix}_{_entityPrefix}_Select]";
-            _selectAllProcedure = $"{_dbPrefix}_{_entityPrefix}_SelectAll]";
-            _updateProcedure = $"{_dbPrefix}_{_entityPrefix}_Update]";
-            _deleteProcedure = $"{_dbPrefix}_{_entityPrefix}_Delete]";
-        }
-        public SqlRepository(IDbTransaction dbTransaction)
-        {
-
-            _dbTransaction = dbTransaction
-            ?? throw new ArgumentNullException(nameof(dbTransaction));
+            _dbTransaction = builder.Transaction;
             _dbConnection = _dbTransaction.Connection;
-
-            CreateProceduresNames();
         }
 
         protected DynamicParameters CreateSqlArguments(TEntity entity)
@@ -106,35 +101,6 @@ namespace ForumApp.Data.Repositories
                 , param: new { Id = id }
                 , commandType: CommandType.StoredProcedure
                 , transaction: _dbTransaction);
-        }
-
-        public virtual Task Remove(TEntity entity)
-        {
-            if (entity is null)
-            {
-                throw new ArgumentNullException(nameof(entity));
-            }
-
-            TId id = FindPrimaryKey(entity);
-
-            return Remove(id);
-        }
-
-        protected TId FindPrimaryKey(TEntity entity)
-        {
-            if (entity is null)
-            {
-                throw new ArgumentNullException(nameof(entity));
-            }
-
-            return entity
-                        //GetPropertiesAndValues is too expensive for one property
-                        .GetPropertiesAndValues()
-                        .Where(p => p.Name.Equals("Id", StringComparison.InvariantCultureIgnoreCase)
-                        && p.Type == typeof(TId))
-                        .Select(p => p.Value)
-                        .Cast<TId>()
-                        .First();
         }
 
         public virtual Task<TEntity> FindById(TId id)
