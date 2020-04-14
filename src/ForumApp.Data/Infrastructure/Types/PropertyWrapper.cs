@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ForumApp.Data.Helpers
+namespace ForumApp.Data.Infrastructure.Types
 {
     class PropertyWrapper
     {

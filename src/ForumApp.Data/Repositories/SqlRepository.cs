@@ -1,7 +1,8 @@
 ﻿using Dapper;
-using ForumApp.Core.Domain;
-using ForumApp.Data.Helpers;
-using ForumApp.Data.Helpers.Reflection;
+using ForumApp.Core;
+using ForumApp.Data.Infrastructure.Helpers.Reflection;
+using ForumApp.Data.Infrastructure.Types;
+using ForumApp.Data.Infrastructure.Types.Builders;
 using ForumApp.Data.Repositories.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -12,15 +13,33 @@ using System.Threading.Tasks;
 
 namespace ForumApp.Data.Repositories
 {
-    public class Repository<TEntity, TId> : IRepository<TEntity, TId>
+    public class SqlRepository<TEntity, TId>
+        : IRepository<TEntity, TId>
         where TEntity : EntityBase
     {
+        #region Fields
+        protected string _insertProcedure;
+        protected string _selectProcedure;
+        protected string _selectAllProcedure;
+        protected string _updateProcedure;
+        protected string _deleteProcedure;
+
         protected IDbTransaction _dbTransaction;
         protected IDbConnection _dbConnection;
-        public Repository(IDbTransaction dbTransaction)
+        #endregion
+
+        public SqlRepository(SQLRepositoryBuilder builder)
         {
-            _dbTransaction = dbTransaction
-                ?? throw new ArgumentNullException(nameof(dbTransaction));
+            if (builder is null)
+                throw new ArgumentNullException(nameof(builder));
+
+            _insertProcedure = builder.InsertProcedure;
+            _selectProcedure = builder.SelectProcedure;
+            _selectAllProcedure = builder.SelectAllProcedure;
+            _updateProcedure = builder.AlterProcedure;
+            _deleteProcedure = builder.DeleteProcedure;
+
+            _dbTransaction = builder.Transaction;
             _dbConnection = _dbTransaction.Connection;
         }
 
@@ -44,11 +63,11 @@ namespace ForumApp.Data.Repositories
         public virtual Task Add(TEntity entity)
         {
             _ = entity ?? throw new ArgumentNullException(nameof(entity));
+            // Need to handle exesting entity
 
             DynamicParameters parameters = CreateSqlArguments(entity);
-
             return _dbConnection.ExecuteAsync(
-                "[dbo].[Forum_User_Insert]"
+                sql: _insertProcedure
                 , param: parameters
                 , commandType: CommandType.StoredProcedure
                 , transaction: _dbTransaction);
@@ -62,7 +81,7 @@ namespace ForumApp.Data.Repositories
             DynamicParameters parameters = CreateSqlArguments(entity);
 
             return _dbConnection.ExecuteAsync(
-                "[dbo].[Forum_User_Update]"
+                  sql: _updateProcedure
                 , param: parameters
                 , commandType: CommandType.StoredProcedure
                 , transaction: _dbTransaction);
@@ -71,52 +90,23 @@ namespace ForumApp.Data.Repositories
         public virtual Task<IEnumerable<TEntity>> All()
         {
             return _dbConnection.QueryAsync<TEntity>
-                (sql: "Forum_User_SelectAll"
+                (sql: _selectAllProcedure
                 , transaction: _dbTransaction
                 , commandType: CommandType.StoredProcedure);
         }
         public virtual Task Remove(TId id)
         {
             return _dbConnection.ExecuteAsync(
-                "[dbo].[Forum_User_Delete]"
+                  sql: _deleteProcedure
                 , param: new { Id = id }
                 , commandType: CommandType.StoredProcedure
                 , transaction: _dbTransaction);
         }
 
-        public virtual Task Remove(TEntity entity)
-        {
-            if (entity is null)
-            {
-                throw new ArgumentNullException(nameof(entity));
-            }
-
-            TId id = FindPrimaryKey(entity);
-
-            return Remove(id);
-        }
-
-        protected TId FindPrimaryKey(TEntity entity)
-        {
-            if (entity is null)
-            {
-                throw new ArgumentNullException(nameof(entity));
-            }
-
-            return entity
-                        //GetPropertiesAndValues is too expensive for one property
-                        .GetPropertiesAndValues()
-                        .Where(p => p.Name.Equals("Id", StringComparison.InvariantCultureIgnoreCase)
-                        && p.Type == typeof(TId))
-                        .Select(p => p.Value)
-                        .Cast<TId>()
-                        .First();
-        }
-
         public virtual Task<TEntity> FindById(TId id)
         {
             return _dbConnection.QueryFirstAsync<TEntity>
-                (sql: "Forum_User_Select"
+                (sql: _selectProcedure
                 , param: new { Id = id }
                 , transaction: _dbTransaction
                 , commandType: CommandType.StoredProcedure);
