@@ -1,6 +1,6 @@
 ﻿using ForumApp.Core.Domain.JunctionEntities;
 
-namespace ForumApp.Data.Repositories.Interfaces
+namespace ForumApp.Core.Interfaces.Repositories
 {
     public interface IBannedRolesToSectionRepository : IRepository<BannedRolesToSection, string[]>
     {

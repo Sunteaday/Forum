@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ForumApp.Data.Infrastructure.Types
 {
-    class PropertyWrapper
+    internal class PropertyWrapper
     {
         public string Name { get; set; }
         public object Value { get; set; }

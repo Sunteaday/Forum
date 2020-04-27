@@ -1,7 +1,7 @@
 ﻿using Dapper;
 using ForumApp.Core.Domain.JunctionEntities;
+using ForumApp.Core.Interfaces.Repositories;
 using ForumApp.Data.Infrastructure.Types.Builders;
-using ForumApp.Data.Repositories.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -14,7 +14,7 @@ namespace ForumApp.Data.Repositories
         : SqlRepository<UserForbiddenAbility, string[]>
         , IUserForbiddenAbilityRepository
     {
-        public UserForbiddenAbilityRepository(SQLRepositoryBuilder builder)
+        public UserForbiddenAbilityRepository(SqlRepositoryBuilder builder)
             : base(builder)
         {
         }

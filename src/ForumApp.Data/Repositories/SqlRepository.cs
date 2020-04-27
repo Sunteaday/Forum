@@ -1,9 +1,9 @@
 ﻿using Dapper;
-using ForumApp.Core;
+using ForumApp.Core.Domain;
+using ForumApp.Core.Interfaces.Repositories;
 using ForumApp.Data.Infrastructure.Helpers.Reflection;
 using ForumApp.Data.Infrastructure.Types;
 using ForumApp.Data.Infrastructure.Types.Builders;
-using ForumApp.Data.Repositories.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -18,17 +18,17 @@ namespace ForumApp.Data.Repositories
         where TEntity : EntityBase
     {
         #region Fields
-        protected string _insertProcedure;
-        protected string _selectProcedure;
-        protected string _selectAllProcedure;
-        protected string _updateProcedure;
-        protected string _deleteProcedure;
+        protected readonly string _insertProcedure;
+        protected readonly string _selectProcedure;
+        protected readonly string _selectAllProcedure;
+        protected readonly string _updateProcedure;
+        protected readonly string _deleteProcedure;
 
-        protected IDbTransaction _dbTransaction;
-        protected IDbConnection _dbConnection;
+        protected readonly IDbTransaction _dbTransaction;
+        protected readonly IDbConnection _dbConnection;
         #endregion
 
-        public SqlRepository(SQLRepositoryBuilder builder)
+        public SqlRepository(SqlRepositoryBuilder builder)
         {
             if (builder is null)
                 throw new ArgumentNullException(nameof(builder));
@@ -62,8 +62,8 @@ namespace ForumApp.Data.Repositories
 
         public virtual Task Add(TEntity entity)
         {
-            _ = entity ?? throw new ArgumentNullException(nameof(entity));
-            // Need to handle exesting entity
+            if (entity is null)
+                throw new ArgumentNullException(nameof(entity));
 
             DynamicParameters parameters = CreateSqlArguments(entity);
             return _dbConnection.ExecuteAsync(
@@ -76,10 +76,10 @@ namespace ForumApp.Data.Repositories
 
         public virtual Task Update(TEntity entity)
         {
-            _ = entity ?? throw new ArgumentNullException(nameof(entity));
+            if (entity is null)
+                throw new ArgumentNullException(nameof(entity));
 
             DynamicParameters parameters = CreateSqlArguments(entity);
-
             return _dbConnection.ExecuteAsync(
                   sql: _updateProcedure
                 , param: parameters
@@ -110,6 +110,16 @@ namespace ForumApp.Data.Repositories
                 , param: new { Id = id }
                 , transaction: _dbTransaction
                 , commandType: CommandType.StoredProcedure);
+        }
+
+        public virtual Task RemoveAll()
+        {
+            throw new NotImplementedException();
+
+            //return _dbConnection.ExecuteAsync
+            //    (sql: ""
+            //    , commandType: CommandType.StoredProcedure
+            //    , transaction: _dbTransaction);
         }
     }
 }

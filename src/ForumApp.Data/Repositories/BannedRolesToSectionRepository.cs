@@ -1,22 +1,22 @@
 ﻿using Dapper;
 using ForumApp.Core.Domain.JunctionEntities;
+using ForumApp.Core.Interfaces.Repositories;
 using ForumApp.Data.Infrastructure.Types.Builders;
-using ForumApp.Data.Repositories.Interfaces;
 using System;
 using System.Data;
 using System.Threading.Tasks;
 
 namespace ForumApp.Data.Repositories
 {
-    public class BannedRolesToSectionRepository 
+    public class BannedRolesToSectionRepository
         : SqlRepository<BannedRolesToSection, string[]>
         , IBannedRolesToSectionRepository
     {
-        public BannedRolesToSectionRepository(SQLRepositoryBuilder builder)
+        public BannedRolesToSectionRepository(SqlRepositoryBuilder builder)
             : base(builder)
         {
         }
-        
+
         /// <summary>
         /// 
         /// </summary>
