@@ -5,7 +5,7 @@ using System.Text;
 
 namespace ForumApp.Core.Interfaces.Repositories
 {
-    public interface IBannedRolesToPostsRepository : IRepository<BannedRolesToPosts, string[]>
+    public interface IBannedRolesToPostsRepository : IRepository<BannedRolesToPosts, BannedRolesToPosts>
     {
 
     }

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace ForumApp.Core.Interfaces.Repositories
 {
-    public interface IModeratorTopicRepository : IRepository<ModeratorTopic, string[]>
+    public interface IModeratorTopicRepository : IRepository<ModeratorTopic, ModeratorTopic>
     {
 
     }

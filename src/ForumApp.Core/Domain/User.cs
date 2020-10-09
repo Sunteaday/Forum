@@ -18,5 +18,7 @@ namespace ForumApp.Core.Domain
 
         public string RoleId { get; set; }
 
+        public string AvatarId { get; set; }
+
     }
 }

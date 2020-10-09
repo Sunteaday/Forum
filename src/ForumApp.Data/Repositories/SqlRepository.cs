@@ -21,8 +21,9 @@ namespace ForumApp.Data.Repositories
         protected readonly string _insertProcedure;
         protected readonly string _selectProcedure;
         protected readonly string _selectAllProcedure;
-        protected readonly string _updateProcedure;
+        protected readonly string _alterProcedure;
         protected readonly string _deleteProcedure;
+        protected readonly string _deleteAllProcedure;
 
         protected readonly IDbTransaction _dbTransaction;
         protected readonly IDbConnection _dbConnection;
@@ -36,8 +37,9 @@ namespace ForumApp.Data.Repositories
             _insertProcedure = builder.InsertProcedure;
             _selectProcedure = builder.SelectProcedure;
             _selectAllProcedure = builder.SelectAllProcedure;
-            _updateProcedure = builder.AlterProcedure;
+            _alterProcedure = builder.AlterProcedure;
             _deleteProcedure = builder.DeleteProcedure;
+            _deleteAllProcedure = builder.DeleteAllProcedure;
 
             _dbTransaction = builder.Transaction;
             _dbConnection = _dbTransaction.Connection;
@@ -81,7 +83,7 @@ namespace ForumApp.Data.Repositories
 
             DynamicParameters parameters = CreateSqlArguments(entity);
             return _dbConnection.ExecuteAsync(
-                  sql: _updateProcedure
+                  sql: _alterProcedure
                 , param: parameters
                 , commandType: CommandType.StoredProcedure
                 , transaction: _dbTransaction);
@@ -94,32 +96,34 @@ namespace ForumApp.Data.Repositories
                 , transaction: _dbTransaction
                 , commandType: CommandType.StoredProcedure);
         }
-        public virtual Task Remove(TId id)
+        protected virtual Task RemoveInternal(object param)
         {
             return _dbConnection.ExecuteAsync(
                   sql: _deleteProcedure
-                , param: new { Id = id }
+                , param: param
                 , commandType: CommandType.StoredProcedure
                 , transaction: _dbTransaction);
         }
-
-        public virtual Task<TEntity> FindById(TId id)
+        public virtual Task Remove(TId id)
+        {
+            return RemoveInternal(new { Id = id });
+        }
+        protected virtual Task<TEntity> FindByIdInternal(object param)
         {
             return _dbConnection.QueryFirstAsync<TEntity>
-                (sql: _selectProcedure
-                , param: new { Id = id }
-                , transaction: _dbTransaction
-                , commandType: CommandType.StoredProcedure);
+               (sql: _selectProcedure
+               , param: param
+               , transaction: _dbTransaction
+               , commandType: CommandType.StoredProcedure);
+        }
+        public virtual Task<TEntity> FindById(TId id)
+        {
+            return FindByIdInternal(new { Id = id });
         }
 
         public virtual Task RemoveAll()
         {
-            throw new NotImplementedException();
-
-            //return _dbConnection.ExecuteAsync
-            //    (sql: ""
-            //    , commandType: CommandType.StoredProcedure
-            //    , transaction: _dbTransaction);
+            return _dbConnection.ExecuteAsync(sql: _deleteAllProcedure);
         }
     }
 }

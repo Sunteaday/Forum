@@ -24,15 +24,17 @@ namespace ForumApp.Data.Infrastructure.Types.Builders
 
             return this;
         }
-
         public ForumUnitOfWorkBuilder SetDependency<TInterface>(Func<object[], TInterface> implementationFactory)
-            where TInterface : class
+           where TInterface : class
         {
-            if (implementationFactory is null)
-                throw new ArgumentNullException(nameof(implementationFactory));
+            return SetDependency(typeof(TInterface), implementationFactory);
+        }
+        public ForumUnitOfWorkBuilder SetDependency(Type dependencyType, Func<object[], object> implementationFactory)
+        {
+            if (dependencyType is null || implementationFactory is null)
+                throw new ArgumentNullException();
 
-
-            _dependencies.Add(typeof(TInterface), implementationFactory);
+            _dependencies.Add(dependencyType, implementationFactory);
 
             return this;
         }

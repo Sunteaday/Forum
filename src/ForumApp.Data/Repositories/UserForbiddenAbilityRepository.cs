@@ -11,52 +11,32 @@ using System.Threading.Tasks;
 namespace ForumApp.Data.Repositories
 {
     public class UserForbiddenAbilityRepository
-        : SqlRepository<UserForbiddenAbility, string[]>
+        : SqlRepository<UserForbiddenAbility, UserForbiddenAbility>
         , IUserForbiddenAbilityRepository
     {
         public UserForbiddenAbilityRepository(SqlRepositoryBuilder builder)
             : base(builder)
         {
         }
-        public override Task<UserForbiddenAbility> FindById(string[] id)
+
+        public override Task<UserForbiddenAbility> FindById(UserForbiddenAbility id)
         {
-            if (id == null || id.Length != 3)
-                throw new ArgumentException(nameof(id));
-
-            string userId = id[0];
-            string abilityId = id[1];
-            string topicId = id[2];
-
-            return _dbConnection.QueryFirstAsync<UserForbiddenAbility>
-                (sql: _selectProcedure
-                , param: new
+            return this.FindByIdInternal(new
                 {
-                    UserId = userId,
-                    AbilityId = abilityId,
-                    TopicId = topicId
-                }
-                , transaction: _dbTransaction
-                , commandType: CommandType.StoredProcedure);
+                    UserId = id.UserId,
+                    AbilityId = id.AbilityId,
+                    TopicId = id.TopicId
+                });
         }
-        public override Task Remove(string[] id)
+
+        public override Task Remove(UserForbiddenAbility id)
         {
-            if (id == null || id.Length != 3)
-                throw new ArgumentException(nameof(id));
-
-            string userId = id[0];
-            string abilityId = id[1];
-            string topicId = id[2];
-
-            return _dbConnection.ExecuteAsync
-                (sql: _deleteProcedure
-                , param: new
+            return this.RemoveInternal(new
                 {
-                    UserId = userId,
-                    AbilityId = abilityId,
-                    TopicId = topicId
-                }
-                , transaction: _dbTransaction
-                , commandType: CommandType.StoredProcedure);
-        }
+                    UserId = id.UserId,
+                    AbilityId = id.AbilityId,
+                    TopicId = id.TopicId
+                });
+        }        
     }
 }

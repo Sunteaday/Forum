@@ -5,7 +5,7 @@ using System.Text;
 
 namespace ForumApp.Core.Interfaces.Repositories
 {
-    public interface IUserForbiddenAbilityRepository : IRepository<UserForbiddenAbility, string[]>
+    public interface IUserForbiddenAbilityRepository : IRepository<UserForbiddenAbility, UserForbiddenAbility>
     {
 
     }

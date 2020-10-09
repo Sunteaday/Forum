@@ -2,7 +2,7 @@
 
 namespace ForumApp.Core.Interfaces.Repositories
 {
-    public interface IBannedRolesToSectionRepository : IRepository<BannedRolesToSection, string[]>
+    public interface IBannedRolesToSectionRepository : IRepository<BannedRolesToSection, BannedRolesToSection>
     {
 
     }

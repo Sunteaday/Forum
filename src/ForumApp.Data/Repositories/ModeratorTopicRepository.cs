@@ -11,41 +11,24 @@ using System.Threading.Tasks;
 namespace ForumApp.Data.Repositories
 {
     public class ModeratorTopicRepository
-        : SqlRepository<ModeratorTopic, string[]>
+        : SqlRepository<ModeratorTopic, ModeratorTopic>
         , IModeratorTopicRepository
     {
         public ModeratorTopicRepository(SqlRepositoryBuilder builder)
             : base(builder)
         {
+
         }
 
-        public override Task<ModeratorTopic> FindById(string[] id)
+        public override Task<ModeratorTopic> FindById(ModeratorTopic id)
         {
-            if (id == null || id.Length != 2)
-                throw new ArgumentException(nameof(id));
-
-            string userId = id[0];
-            string topicId = id[1];
-
-            return _dbConnection.QueryFirstAsync<ModeratorTopic>
-                (sql: _selectProcedure
-                , param: new { UserId = userId, TopicId = topicId }
-                , transaction: _dbTransaction
-                , commandType: CommandType.StoredProcedure);
+            return this.FindByIdInternal(new { UserId = id.UserId, TopicId = id.TopicId });
         }
-        public override Task Remove(string[] id)
+
+        public override Task Remove(ModeratorTopic id)
         {
-            if (id == null || id.Length != 2)
-                throw new ArgumentException(nameof(id));
-
-            string userId = id[0];
-            string topicId = id[1];
-
-            return _dbConnection.ExecuteAsync
-                (sql: _deleteProcedure
-                , param: new { UserId = userId, TopicId = topicId }
-                , transaction: _dbTransaction
-                , commandType: CommandType.StoredProcedure);
+            return this.RemoveInternal(new { UserId = id.UserId, TopicId = id.TopicId });
         }
+
     }
 }

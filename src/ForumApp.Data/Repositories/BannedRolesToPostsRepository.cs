@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace ForumApp.Data.Repositories
 {
     public class BannedRolesToPostsRepository
-        : SqlRepository<BannedRolesToPosts, string[]>
+        : SqlRepository<BannedRolesToPosts, BannedRolesToPosts>
         , IBannedRolesToPostsRepository
 
     {
@@ -20,38 +20,15 @@ namespace ForumApp.Data.Repositories
         {
 
         }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id">Warning. A strict usage pass ids as defined in the class</param>
-        /// <returns></returns>
-        public override Task<BannedRolesToPosts> FindById(string[] id)
+
+        public override Task<BannedRolesToPosts> FindById(BannedRolesToPosts id)
         {
-            if (id == null || id.Length != 2)
-                throw new ArgumentException(nameof(id));
-
-            string roleId = id[0];
-            string postId = id[1];
-
-            return _dbConnection.QueryFirstAsync<BannedRolesToPosts>
-                (sql: _selectProcedure
-                , param: new { RoleId = roleId, PostId = postId }
-                , transaction: _dbTransaction
-                , commandType: CommandType.StoredProcedure);
+            return this.FindByIdInternal(new { RoleId = id.RoleId, PostId = id.PostId });
         }
-        public override Task Remove(string[] id)
+
+        public override Task Remove(BannedRolesToPosts id)
         {
-            if (id == null || id.Length != 2)
-                throw new ArgumentException(nameof(id));
-
-            string roleId = id[0];
-            string postId = id[1];
-
-            return _dbConnection.ExecuteAsync
-                (sql: _deleteProcedure
-                , param: new { RoleId = roleId, PostId = postId }
-                , transaction: _dbTransaction
-                , commandType: CommandType.StoredProcedure);
+            return this.RemoveInternal(new { RoleId = id.RoleId, PostId = id.PostId });
         }
     }
 }

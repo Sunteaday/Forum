@@ -42,6 +42,15 @@ namespace ForumApp.Data.Infrastructure.Types.Builders
             return this;
         }
 
+        public SqlRepositoryBuilder SetDeleteAllProcedure(string deleteAllprocedure)
+        {
+            if (string.IsNullOrWhiteSpace(deleteAllprocedure))
+                throw new ArgumentNullException(nameof(deleteAllprocedure));
+
+            DeleteAllProcedure = deleteAllprocedure;
+            return this;
+        }
+
         public SqlRepositoryBuilder SetAlterProcedure(string alterProcedure)
         {
             if (string.IsNullOrWhiteSpace(alterProcedure))
@@ -64,6 +73,8 @@ namespace ForumApp.Data.Infrastructure.Types.Builders
         public string InsertProcedure { get; protected set; }
 
         public string DeleteProcedure { get; protected set; }
+
+        public string DeleteAllProcedure { get; protected set; }
 
         public string AlterProcedure { get; protected set; }
 

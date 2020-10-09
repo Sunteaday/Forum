@@ -13,6 +13,7 @@ namespace ForumApp.Core.Interfaces.Repositories
 
         public Task<TEntity> FindById(TId id);
 
+        // Need to refactor as offset/pagination system
         public Task<IEnumerable<TEntity>> All();
 
         public Task Update(TEntity entity);

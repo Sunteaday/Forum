@@ -63,9 +63,9 @@ namespace ForumApp.Data
 
             foreach (var (repoType, repoFactoryMethod) in _repositoryFactories)
             {
-                var createdRepo = repoFactoryMethod.Invoke(new object[] { _dbTransaction });
+                var repositoryInsance = repoFactoryMethod.Invoke(new object[] { _dbTransaction });
 
-                _repositories[repoType] = createdRepo;
+                _repositories[repoType] = repositoryInsance;
 
             }
         }
@@ -104,32 +104,39 @@ namespace ForumApp.Data
             ResetRepositories();
         }
 
+        private T ResolveRepositoryByType<T>()
+            where T : class
+        {
+            _repositories.TryGetValue(typeof(T), out object repositoryInstance);
+            return repositoryInstance as T ?? throw new ArgumentOutOfRangeException(nameof(T));
+        }
+
         #region Repository Properties
-        public IAbilityRepository Ability => _repositories[typeof(IAbilityRepository)] as IAbilityRepository;
+        public IAbilityRepository Ability => ResolveRepositoryByType<IAbilityRepository>();
 
-        public IBannedRolesToPostsRepository BannedRolesToPosts => _repositories[typeof(IBannedRolesToPostsRepository)] as IBannedRolesToPostsRepository;
+        public IBannedRolesToPostsRepository BannedRolesToPosts => ResolveRepositoryByType<IBannedRolesToPostsRepository>();
 
-        public IBannedRolesToSectionRepository BannedRolesToSection => _repositories[typeof(IBannedRolesToSectionRepository)] as IBannedRolesToSectionRepository;
+        public IBannedRolesToSectionRepository BannedRolesToSection => ResolveRepositoryByType<IBannedRolesToSectionRepository>();
 
-        public IBannedRolesToTopicsRepository BannedRolesToTopics => _repositories[typeof(IBannedRolesToTopicsRepository)] as IBannedRolesToTopicsRepository;
+        public IBannedRolesToTopicsRepository BannedRolesToTopics => ResolveRepositoryByType<IBannedRolesToTopicsRepository>();
 
-        public IModeratorTopicRepository ModeratorTopic => _repositories[typeof(IModeratorTopicRepository)] as IModeratorTopicRepository;
+        public IModeratorTopicRepository ModeratorTopic => ResolveRepositoryByType<IModeratorTopicRepository>();
 
-        public IPostRepository Post => _repositories[typeof(IPostRepository)] as IPostRepository;
+        public IPostRepository Post => ResolveRepositoryByType<IPostRepository>();
 
-        public IRoleRepository Role => _repositories[typeof(IRoleRepository)] as IRoleRepository;
+        public IRoleRepository Role => ResolveRepositoryByType<IRoleRepository>();
 
-        public ISectionRepository Section => _repositories[typeof(ISectionRepository)] as ISectionRepository;
+        public ISectionRepository Section => ResolveRepositoryByType<ISectionRepository>();
 
-        public ISettingRepository Setting => _repositories[typeof(ISettingRepository)] as ISettingRepository;
+        public ISettingRepository Setting => ResolveRepositoryByType<ISettingRepository>();
 
-        public ITopicRepository Topic => _repositories[typeof(ITopicRepository)] as ITopicRepository;
+        public ITopicRepository Topic => ResolveRepositoryByType<ITopicRepository>();
 
-        public IUserForbiddenAbilityRepository ForbiddenAbility => _repositories[typeof(IUserForbiddenAbilityRepository)] as IUserForbiddenAbilityRepository;
+        public IUserForbiddenAbilityRepository ForbiddenAbility => ResolveRepositoryByType<IUserForbiddenAbilityRepository>();
 
-        public IUserRepository User => _repositories[typeof(IUserRepository)] as IUserRepository;
+        public IUserRepository User => ResolveRepositoryByType<IUserRepository>();
 
-        public IUserSettingRepository UserSetting => _repositories[typeof(IUserSettingRepository)] as IUserSettingRepository;
+        public IUserSettingRepository UserSetting => ResolveRepositoryByType<IUserSettingRepository>();
 
         #endregion
 
