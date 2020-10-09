@@ -1,54 +1,35 @@
 ﻿using Dapper;
 using ForumApp.Core.Domain.JunctionEntities;
+using ForumApp.Core.Interfaces.Repositories;
 using ForumApp.Data.Infrastructure.Types.Builders;
-using ForumApp.Data.Repositories.Interfaces;
 using System;
 using System.Data;
 using System.Threading.Tasks;
 
 namespace ForumApp.Data.Repositories
 {
-    public class BannedRolesToSectionRepository 
-        : SqlRepository<BannedRolesToSection, string[]>
+    public class BannedRolesToSectionRepository
+        : SqlRepository<BannedRolesToSection, BannedRolesToSection>
         , IBannedRolesToSectionRepository
     {
-        public BannedRolesToSectionRepository(SQLRepositoryBuilder builder)
+        public BannedRolesToSectionRepository(SqlRepositoryBuilder builder)
             : base(builder)
         {
         }
-        
+
         /// <summary>
         /// 
         /// </summary>
         /// <param name="id">Warning. A strict usage pass ids as defined in the class</param>
         /// <returns></returns>
-        public override Task<BannedRolesToSection> FindById(string[] id)
+        public override Task<BannedRolesToSection> FindById(BannedRolesToSection id)
         {
-            if (id == null || id.Length != 2)
-                throw new ArgumentException(nameof(id));
-
-            string roleId = id[0];
-            string sectionId = id[1];
-
-            return _dbConnection.QueryFirstAsync<BannedRolesToSection>
-                (sql: _selectProcedure
-                , param: new { RoleId = roleId, SectionId = sectionId }
-                , transaction: _dbTransaction
-                , commandType: CommandType.StoredProcedure);
+            return this.FindByIdInternal(new { RoleId = id.RoleId, SectionId = id.SectionId });
         }
-        public override Task Remove(string[] id)
+
+        public override Task Remove(BannedRolesToSection id)
         {
-            if (id == null || id.Length != 2)
-                throw new ArgumentException(nameof(id));
-
-            string roleId = id[0];
-            string sectionId = id[1];
-
-            return _dbConnection.ExecuteAsync
-                (sql: _deleteProcedure
-                , param: new { RoleId = roleId, SectionId = sectionId }
-                , transaction: _dbTransaction
-                , commandType: CommandType.StoredProcedure);
+            return this.RemoveInternal(new { RoleId = id.RoleId, SectionId = id.SectionId });
         }
     }
 }

@@ -1,9 +1,9 @@
 ﻿using Dapper;
-using ForumApp.Core;
+using ForumApp.Core.Domain;
+using ForumApp.Core.Interfaces.Repositories;
 using ForumApp.Data.Infrastructure.Helpers.Reflection;
 using ForumApp.Data.Infrastructure.Types;
 using ForumApp.Data.Infrastructure.Types.Builders;
-using ForumApp.Data.Repositories.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -18,17 +18,18 @@ namespace ForumApp.Data.Repositories
         where TEntity : EntityBase
     {
         #region Fields
-        protected string _insertProcedure;
-        protected string _selectProcedure;
-        protected string _selectAllProcedure;
-        protected string _updateProcedure;
-        protected string _deleteProcedure;
+        protected readonly string _insertProcedure;
+        protected readonly string _selectProcedure;
+        protected readonly string _selectAllProcedure;
+        protected readonly string _alterProcedure;
+        protected readonly string _deleteProcedure;
+        protected readonly string _deleteAllProcedure;
 
-        protected IDbTransaction _dbTransaction;
-        protected IDbConnection _dbConnection;
+        protected readonly IDbTransaction _dbTransaction;
+        protected readonly IDbConnection _dbConnection;
         #endregion
 
-        public SqlRepository(SQLRepositoryBuilder builder)
+        public SqlRepository(SqlRepositoryBuilder builder)
         {
             if (builder is null)
                 throw new ArgumentNullException(nameof(builder));
@@ -36,8 +37,9 @@ namespace ForumApp.Data.Repositories
             _insertProcedure = builder.InsertProcedure;
             _selectProcedure = builder.SelectProcedure;
             _selectAllProcedure = builder.SelectAllProcedure;
-            _updateProcedure = builder.AlterProcedure;
+            _alterProcedure = builder.AlterProcedure;
             _deleteProcedure = builder.DeleteProcedure;
+            _deleteAllProcedure = builder.DeleteAllProcedure;
 
             _dbTransaction = builder.Transaction;
             _dbConnection = _dbTransaction.Connection;
@@ -62,8 +64,8 @@ namespace ForumApp.Data.Repositories
 
         public virtual Task Add(TEntity entity)
         {
-            _ = entity ?? throw new ArgumentNullException(nameof(entity));
-            // Need to handle exesting entity
+            if (entity is null)
+                throw new ArgumentNullException(nameof(entity));
 
             DynamicParameters parameters = CreateSqlArguments(entity);
             return _dbConnection.ExecuteAsync(
@@ -76,12 +78,12 @@ namespace ForumApp.Data.Repositories
 
         public virtual Task Update(TEntity entity)
         {
-            _ = entity ?? throw new ArgumentNullException(nameof(entity));
+            if (entity is null)
+                throw new ArgumentNullException(nameof(entity));
 
             DynamicParameters parameters = CreateSqlArguments(entity);
-
             return _dbConnection.ExecuteAsync(
-                  sql: _updateProcedure
+                  sql: _alterProcedure
                 , param: parameters
                 , commandType: CommandType.StoredProcedure
                 , transaction: _dbTransaction);
@@ -94,22 +96,34 @@ namespace ForumApp.Data.Repositories
                 , transaction: _dbTransaction
                 , commandType: CommandType.StoredProcedure);
         }
-        public virtual Task Remove(TId id)
+        protected virtual Task RemoveInternal(object param)
         {
             return _dbConnection.ExecuteAsync(
                   sql: _deleteProcedure
-                , param: new { Id = id }
+                , param: param
                 , commandType: CommandType.StoredProcedure
                 , transaction: _dbTransaction);
         }
-
-        public virtual Task<TEntity> FindById(TId id)
+        public virtual Task Remove(TId id)
+        {
+            return RemoveInternal(new { Id = id });
+        }
+        protected virtual Task<TEntity> FindByIdInternal(object param)
         {
             return _dbConnection.QueryFirstAsync<TEntity>
-                (sql: _selectProcedure
-                , param: new { Id = id }
-                , transaction: _dbTransaction
-                , commandType: CommandType.StoredProcedure);
+               (sql: _selectProcedure
+               , param: param
+               , transaction: _dbTransaction
+               , commandType: CommandType.StoredProcedure);
+        }
+        public virtual Task<TEntity> FindById(TId id)
+        {
+            return FindByIdInternal(new { Id = id });
+        }
+
+        public virtual Task RemoveAll()
+        {
+            return _dbConnection.ExecuteAsync(sql: _deleteAllProcedure);
         }
     }
 }

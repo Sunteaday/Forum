@@ -5,9 +5,9 @@ using System.Text;
 
 namespace ForumApp.Data.Infrastructure.Types.Builders
 {
-    public class SQLRepositoryBuilder
+    public class SqlRepositoryBuilder
     {
-        public SQLRepositoryBuilder SetSelectProcedure(string selectProcedure)
+        public SqlRepositoryBuilder SetSelectProcedure(string selectProcedure)
         {
             if (string.IsNullOrWhiteSpace(selectProcedure))
                 throw new ArgumentNullException(nameof(selectProcedure));
@@ -15,7 +15,7 @@ namespace ForumApp.Data.Infrastructure.Types.Builders
             SelectProcedure = selectProcedure;
             return this;
         }
-        public SQLRepositoryBuilder SetSelectAllProcedure(string selectAllProcedure)
+        public SqlRepositoryBuilder SetSelectAllProcedure(string selectAllProcedure)
         {
             if (string.IsNullOrWhiteSpace(selectAllProcedure))
                 throw new ArgumentNullException(nameof(selectAllProcedure));
@@ -24,7 +24,7 @@ namespace ForumApp.Data.Infrastructure.Types.Builders
             return this;
         }
 
-        public SQLRepositoryBuilder SetInsertProcedure(string insertProcedure)
+        public SqlRepositoryBuilder SetInsertProcedure(string insertProcedure)
         {
             if (string.IsNullOrWhiteSpace(insertProcedure))
                 throw new ArgumentNullException(nameof(insertProcedure));
@@ -33,7 +33,7 @@ namespace ForumApp.Data.Infrastructure.Types.Builders
             return this;
         }
 
-        public SQLRepositoryBuilder SetDeleteProcedure(string deleteProcedure)
+        public SqlRepositoryBuilder SetDeleteProcedure(string deleteProcedure)
         {
             if (string.IsNullOrWhiteSpace(deleteProcedure))
                 throw new ArgumentNullException(nameof(deleteProcedure));
@@ -42,7 +42,16 @@ namespace ForumApp.Data.Infrastructure.Types.Builders
             return this;
         }
 
-        public SQLRepositoryBuilder SetAlterProcedure(string alterProcedure)
+        public SqlRepositoryBuilder SetDeleteAllProcedure(string deleteAllprocedure)
+        {
+            if (string.IsNullOrWhiteSpace(deleteAllprocedure))
+                throw new ArgumentNullException(nameof(deleteAllprocedure));
+
+            DeleteAllProcedure = deleteAllprocedure;
+            return this;
+        }
+
+        public SqlRepositoryBuilder SetAlterProcedure(string alterProcedure)
         {
             if (string.IsNullOrWhiteSpace(alterProcedure))
                 throw new ArgumentNullException(nameof(alterProcedure));
@@ -51,12 +60,9 @@ namespace ForumApp.Data.Infrastructure.Types.Builders
             return this;
         }
 
-        public SQLRepositoryBuilder SetTransaction(IDbTransaction transaction)
+        public SqlRepositoryBuilder SetTransaction(IDbTransaction transaction)
         {
-            if (transaction is null)
-                throw new ArgumentNullException(nameof(transaction));
-
-            Transaction = transaction;
+            Transaction = transaction ?? throw new ArgumentNullException(nameof(transaction));
             return this;
         }
 
@@ -67,6 +73,8 @@ namespace ForumApp.Data.Infrastructure.Types.Builders
         public string InsertProcedure { get; protected set; }
 
         public string DeleteProcedure { get; protected set; }
+
+        public string DeleteAllProcedure { get; protected set; }
 
         public string AlterProcedure { get; protected set; }
 

@@ -1,26 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using ForumApp.Core;
 using System.Reflection;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Data;
-using ForumApp.Data.Repositories.Interfaces;
 using ForumApp.Data.Infrastructure.Types.Builders;
+using ForumApp.Core.Interfaces.UnitsOfWork;
+using ForumApp.Core.Interfaces.Repositories;
 using ForumApp.Data.Infrastructure.Helpers.Reflection;
 
 namespace ForumApp.Data
 {
-    public class ForumUnitOfWork : IForumUnitOfWork, IDisposable
+    public class ForumUnitOfWork : IForumUnitOfWork
     {
         #region Fields
-        IDictionary<Type, object> _repositories;
-        IDictionary<Type, Func<object[], object>> _repositoryFactories;
 
-        IDbConnection _dbConnection;
-        IDbTransaction _dbTransaction;
-        IsolationLevel _isolationLevel;
+        private IDictionary<Type, object> _repositories;
+        private IDictionary<Type, Func<object[], object>> _repositoryFactories;
+
+        private IDbConnection _dbConnection;
+        private IDbTransaction _dbTransaction;
+        private IsolationLevel _isolationLevel;
         #endregion
 
         #region Private Methods
@@ -39,14 +40,14 @@ namespace ForumApp.Data
 
         private void RegisterRepositories(ForumUnitOfWorkBuilder builder)
         {
-            // registering all IRepository<,> that defined in UnitOfWork class
-            var _allReposTypes = this.GetType()
+            // gather all repositories that implement IRepository in our UnitOfWork class
+            var allReposTypes = this.GetType()
                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-               .Where(pinf => pinf.PropertyType.DoesImplementGeneric(typeof(IRepository<,>)))
+               .Where(pi => pi.PropertyType.DoesImplementGeneric(typeof(IRepository<,>)))
                .Select(p => p.PropertyType);
 
 
-            foreach (Type repoType in _allReposTypes)
+            foreach (Type repoType in allReposTypes)
             {
                 // resolving repos factories from our builder
                 var repoFactory = builder.ResolveDependency(repoType);
@@ -60,18 +61,11 @@ namespace ForumApp.Data
             _dbTransaction?.Dispose();
             _dbTransaction = _dbConnection.BeginTransaction(_isolationLevel);
 
-            foreach (var factory in _repositoryFactories)
+            foreach (var (repoType, repoFactoryMethod) in _repositoryFactories)
             {
-                // get factory result type
-                Type repoType = factory.Key;
+                var repositoryInsance = repoFactoryMethod.Invoke(new object[] { _dbTransaction });
 
-                // get factory by type
-                var repoFactoryMethod = factory.Value;
-
-                // create repo by factory
-                var repository = repoFactoryMethod.Invoke(new object[] { _dbTransaction });
-
-                _repositories[repoType] = repository;
+                _repositories[repoType] = repositoryInsance;
 
             }
         }
@@ -110,82 +104,60 @@ namespace ForumApp.Data
             ResetRepositories();
         }
 
+        private T ResolveRepositoryByType<T>()
+            where T : class
+        {
+            _repositories.TryGetValue(typeof(T), out object repositoryInstance);
+            return repositoryInstance as T ?? throw new ArgumentOutOfRangeException(nameof(T));
+        }
+
         #region Repository Properties
-        public IAbilityRepository Ability
-        {
-            get => _repositories[typeof(IAbilityRepository)] as IAbilityRepository;
-        }
-        public IBannedRolesToPostsRepository BannedRolesToPosts
-        {
-            get => _repositories[typeof(IBannedRolesToPostsRepository)] as IBannedRolesToPostsRepository;
-        }
-        public IBannedRolesToSectionRepository BannedRolesToSection
-        {
-            get => _repositories[typeof(IBannedRolesToSectionRepository)] as IBannedRolesToSectionRepository;
-        }
-        public IBannedRolesToTopicsRepository BannedRolesToTopics
-        {
-            get => _repositories[typeof(IBannedRolesToTopicsRepository)] as IBannedRolesToTopicsRepository;
-        }
-        public IModeratorTopicRepository ModeratorTopic
-        {
-            get => _repositories[typeof(IModeratorTopicRepository)] as IModeratorTopicRepository;
-        }
-        public IPostRepository Post
-        {
-            get => _repositories[typeof(IPostRepository)] as IPostRepository;
-        }
-        public IRoleRepository Role
-        {
-            get => _repositories[typeof(IRoleRepository)] as IRoleRepository;
-        }
-        public ISectionRepository Section
-        {
-            get => _repositories[typeof(ISectionRepository)] as ISectionRepository;
-        }
-        public ISettingRepository Setting
-        {
-            get => _repositories[typeof(ISettingRepository)] as ISettingRepository;
-        }
-        public ITopicRepository Topic
-        {
-            get => _repositories[typeof(ITopicRepository)] as ITopicRepository;
-        }
-        public IUserForbiddenAbilityRepository ForbiddenAbility
-        {
-            get => _repositories[typeof(IUserForbiddenAbilityRepository)] as IUserForbiddenAbilityRepository;
-        }
-        public IUserRepository User
-        {
-            get => _repositories[typeof(IUserRepository)] as IUserRepository;
-        }
-        public IUserSettingRepository UserSetting
-        {
-            get => _repositories[typeof(IUserSettingRepository)] as IUserSettingRepository;
-        }
+        public IAbilityRepository Ability => ResolveRepositoryByType<IAbilityRepository>();
+
+        public IBannedRolesToPostsRepository BannedRolesToPosts => ResolveRepositoryByType<IBannedRolesToPostsRepository>();
+
+        public IBannedRolesToSectionRepository BannedRolesToSection => ResolveRepositoryByType<IBannedRolesToSectionRepository>();
+
+        public IBannedRolesToTopicsRepository BannedRolesToTopics => ResolveRepositoryByType<IBannedRolesToTopicsRepository>();
+
+        public IModeratorTopicRepository ModeratorTopic => ResolveRepositoryByType<IModeratorTopicRepository>();
+
+        public IPostRepository Post => ResolveRepositoryByType<IPostRepository>();
+
+        public IRoleRepository Role => ResolveRepositoryByType<IRoleRepository>();
+
+        public ISectionRepository Section => ResolveRepositoryByType<ISectionRepository>();
+
+        public ISettingRepository Setting => ResolveRepositoryByType<ISettingRepository>();
+
+        public ITopicRepository Topic => ResolveRepositoryByType<ITopicRepository>();
+
+        public IUserForbiddenAbilityRepository ForbiddenAbility => ResolveRepositoryByType<IUserForbiddenAbilityRepository>();
+
+        public IUserRepository User => ResolveRepositoryByType<IUserRepository>();
+
+        public IUserSettingRepository UserSetting => ResolveRepositoryByType<IUserSettingRepository>();
+
         #endregion
 
         #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
+        private bool _isDisposed = false; // To detect redundant calls
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    this._dbTransaction.Dispose();
-                    this._dbTransaction = null;
+            if (_isDisposed || !disposing)
+                return;
 
-                    this._dbConnection.Dispose();
-                    this._dbConnection = null;
+            this._dbTransaction.Dispose();
+            this._dbTransaction = null;
 
-                    this._repositories = null;
-                    this._repositoryFactories = null;
-                }
+            this._dbConnection.Dispose();
+            this._dbConnection = null;
 
-                disposedValue = true;
-            }
+            this._repositories = null;
+            this._repositoryFactories = null;
+
+            _isDisposed = true;
         }
         // This code added to correctly implement the disposable pattern.
         public void Dispose()

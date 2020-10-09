@@ -1,6 +1,6 @@
 ﻿using ForumApp.Core.Domain;
+using ForumApp.Core.Interfaces.Repositories;
 using ForumApp.Data.Infrastructure.Types.Builders;
-using ForumApp.Data.Repositories.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -12,7 +12,7 @@ namespace ForumApp.Data.Repositories
         : SqlRepository<Setting, string>
         , ISettingRepository
     {
-        public SettingRepository(SQLRepositoryBuilder builder)
+        public SettingRepository(SqlRepositoryBuilder builder)
             : base(builder)
         {
         }

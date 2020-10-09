@@ -6,7 +6,7 @@ using System.Text;
 
 namespace ForumApp.Data.Infrastructure.Helpers.Reflection
 {
-    static class ReflectionHelper
+    internal static class ReflectionHelper
     {
         public static IEnumerable<PropertyWrapper> GetPropertiesAndValues<T>(this T obj)
         {
@@ -24,10 +24,10 @@ namespace ForumApp.Data.Infrastructure.Helpers.Reflection
                        .Any(@interface => @interface.IsGenericType
                        && @interface.GetGenericTypeDefinition() == genericInterface);
         }
-        public static bool DoesImplementInterface(this Type type, Type Interface)
+        public static bool DoesImplementInterface(this Type type, Type @interface)
         {
             return type.GetInterfaces()
-                       .Any(@interface => @interface == Interface);
+                       .Any(i => i == @interface);
         }
 
     }

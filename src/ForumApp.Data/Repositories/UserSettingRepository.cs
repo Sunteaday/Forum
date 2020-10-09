@@ -1,7 +1,7 @@
 ﻿using Dapper;
 using ForumApp.Core.Domain.JunctionEntities;
+using ForumApp.Core.Interfaces.Repositories;
 using ForumApp.Data.Infrastructure.Types.Builders;
-using ForumApp.Data.Repositories.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -11,41 +11,21 @@ using System.Threading.Tasks;
 namespace ForumApp.Data.Repositories
 {
     public class UserSettingRepository
-        : SqlRepository<UserSetting, string[]>
+        : SqlRepository<UserSetting, UserSetting>
         , IUserSettingRepository
     {
-        public UserSettingRepository(SQLRepositoryBuilder builder)
+        public UserSettingRepository(SqlRepositoryBuilder builder)
             : base(builder)
         {
         }
-
-        public override Task<UserSetting> FindById(string[] id)
+        public override Task<UserSetting> FindById(UserSetting id)
         {
-            if (id == null || id.Length != 2)
-                throw new ArgumentException(nameof(id));
-
-            string settingId = id[0];
-            string userId = id[1];
-
-            return _dbConnection.QueryFirstAsync<UserSetting>
-                (sql: _selectProcedure
-                , param: new { SettingId = settingId, UserId = userId }
-                , transaction: _dbTransaction
-                , commandType: CommandType.StoredProcedure);
+            return this.FindByIdInternal(new { SettingId = id.SettingId, UserId = id.UserId });
         }
-        public override Task Remove(string[] id)
+
+        public override Task Remove(UserSetting id)
         {
-            if (id == null || id.Length != 2)
-                throw new ArgumentException(nameof(id));
-
-            string settingId = id[0];
-            string userId = id[1];
-
-            return _dbConnection.ExecuteAsync
-                (sql: _deleteProcedure
-                , param: new { SettingId = settingId, UserId = userId }
-                , transaction: _dbTransaction
-                , commandType: CommandType.StoredProcedure);
+            return this.RemoveInternal(new { SettingId = id.SettingId, UserId = id.UserId });
         }
     }
 }

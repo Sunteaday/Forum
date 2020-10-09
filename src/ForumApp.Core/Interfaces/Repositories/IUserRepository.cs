@@ -3,9 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ForumApp.Data.Repositories.Interfaces
+namespace ForumApp.Core.Interfaces.Repositories
 {
-    public interface IPostRepository : IRepository<Post, string>
+    public interface IUserRepository : IRepository<User, string>
     {
 
     }

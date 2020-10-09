@@ -1,15 +1,15 @@
-﻿using ForumApp.Data.Repositories.Interfaces;
+﻿using ForumApp.Core.Interfaces.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ForumApp.Data
+namespace ForumApp.Core.Interfaces.UnitsOfWork
 {
-    public interface IForumUnitOfWork
+    public interface IForumUnitOfWork : IDisposable
     {
-        void Commit();
+        public void Commit();
 
-        void Rollback();
+        public void Rollback();
 
         IAbilityRepository Ability { get; }
 
@@ -36,5 +36,6 @@ namespace ForumApp.Data
         IUserRepository User { get; }
 
         IUserSettingRepository UserSetting { get; }
+
     }
 }

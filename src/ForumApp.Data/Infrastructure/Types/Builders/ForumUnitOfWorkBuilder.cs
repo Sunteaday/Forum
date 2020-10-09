@@ -1,5 +1,4 @@
-﻿using ForumApp.Data.Repositories.Interfaces;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -10,18 +9,32 @@ namespace ForumApp.Data.Infrastructure.Types.Builders
     // Probably need to create a Build() method that invalidates all inputs and returns a FinalizedForumUnitOfWorkBuilder
     public class ForumUnitOfWorkBuilder
     {
-        Dictionary<Type, Func<object[], object>> _dependecies = new Dictionary<Type, Func<object[], object>>();
+        private readonly Dictionary<Type, Func<object[], object>> _dependencies;
 
-        public ForumUnitOfWorkBuilder SetDependency(Type interfaceType, Func<object[], object> implementationFactory)
+        public ForumUnitOfWorkBuilder()
         {
-            if (interfaceType is null)
-                throw new ArgumentNullException(nameof(interfaceType));
+            _dependencies = new Dictionary<Type, Func<object[], object>>();
+        }
 
-            if (implementationFactory is null)
-                throw new ArgumentNullException(nameof(implementationFactory));
+        public ForumUnitOfWorkBuilder SetDependency<TInterface, TImplement>()
+            where TInterface : class
+            where TImplement : class, new()
+        {
+            _dependencies.Add(typeof(TInterface), _ => new TImplement());
 
+            return this;
+        }
+        public ForumUnitOfWorkBuilder SetDependency<TInterface>(Func<object[], TInterface> implementationFactory)
+           where TInterface : class
+        {
+            return SetDependency(typeof(TInterface), implementationFactory);
+        }
+        public ForumUnitOfWorkBuilder SetDependency(Type dependencyType, Func<object[], object> implementationFactory)
+        {
+            if (dependencyType is null || implementationFactory is null)
+                throw new ArgumentNullException();
 
-            _dependecies.Add(interfaceType, implementationFactory);
+            _dependencies.Add(dependencyType, implementationFactory);
 
             return this;
         }
@@ -45,7 +58,7 @@ namespace ForumApp.Data.Infrastructure.Types.Builders
 
         public Func<object[], object> ResolveDependency(Type type)
         {
-            return _dependecies[type];
+            return _dependencies[type];
         }
     }
 }
